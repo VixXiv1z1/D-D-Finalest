@@ -43,6 +43,9 @@ One row per (user, room) pair — a user's character in that specific room.
 | hp_current       | int         |                                                               |
 | hp_max           | int         |                                                               |
 | status_effects   | jsonb array | list of effect name strings, e.g. `["Burned"]`                |
+| sword_style      | text null   | one of `GameData.swordStyles[].name`, set by the DM on the Classes tab |
+| sword_mastery    | text null   | one of `GameData.swordMasteryLevels`, set alongside sword_style |
+| known_spells     | jsonb array | `[{ name, element, tier }]`, granted by the DM on the Classes tab |
 | inventory        | jsonb array | `[{ name, qty }]`                                             |
 | created_at       | timestamp   |                                                               |
 

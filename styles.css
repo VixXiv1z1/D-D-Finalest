@@ -130,6 +130,79 @@ label {
 .btn-roster:hover { border-color: var(--blood-bright); box-shadow: 0 0 10px rgba(138,31,31,0.35); }
 .roster-torch { font-size: 13px; }
 
+.btn-tutorial {
+  border-color: var(--gold-dim);
+  background: linear-gradient(180deg, #1a1611, #12100c);
+  color: var(--gold-bright);
+  font-size: 13px;
+  padding: 8px 14px;
+}
+.btn-tutorial:hover { border-color: var(--gold); box-shadow: 0 0 10px rgba(201,162,75,0.3); }
+
+/* ---- DM tutorial modal ---- */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5,3,4,0.75);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 24px;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 640px;
+  max-height: 84vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #150f11, #0e0a0b);
+  border: 1px solid var(--gold-dim);
+  border-radius: var(--radius-ui);
+  box-shadow: 0 24px 70px rgba(0,0,0,0.6);
+  overflow: hidden;
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--ink-line);
+  flex-shrink: 0;
+}
+.modal-head h3 { margin: 0; color: var(--gold-bright); font-size: 18px; }
+
+.modal-body { padding: 18px 20px; overflow-y: auto; }
+
+.tutorial-section { margin-bottom: 22px; }
+.tutorial-section:last-child { margin-bottom: 0; }
+.tutorial-section h4 {
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--gold-bright);
+  margin: 0 0 6px;
+  font-weight: 700;
+}
+.tutorial-section p {
+  font-size: 13.5px;
+  color: var(--text-hi);
+  line-height: 1.6;
+  margin: 0;
+}
+.tutorial-section p strong { color: var(--gold-bright); }
+
+.overview-name {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gold-bright);
+  margin-bottom: 14px;
+}
+
 /* ===================================================================
    Auth / Lobby (index.html)
    =================================================================== */

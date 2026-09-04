@@ -272,6 +272,14 @@ async function renderConditionPanel(container, character) {
       <label>Inventory</label>
       ${character.inventory.length ? character.inventory.map((i) => `<div class="inventory-item"><span>${escapeHtml(i.name)}</span><span class="qty">×${i.qty}</span></div>`).join("") : `<p style="color:var(--text-lo); font-size:12.5px;">Empty.</p>`}
     </div>
+    <div style="margin-bottom:20px;">
+      <label>Sword style</label>
+      ${character.swordStyle ? `<span class="status-chip">${escapeHtml(character.swordStyle)} — ${escapeHtml(character.swordMastery || "Beginner")}</span>` : `<p style="color:var(--text-lo); font-size:12.5px;">None assigned yet — ask your Dice Master.</p>`}
+    </div>
+    <div style="margin-bottom:20px;">
+      <label>Known spells</label>
+      ${(character.knownSpells || []).length ? character.knownSpells.map((s) => `<span class="status-chip">${escapeHtml(s.name)} <span style="color:var(--text-lo);">(${escapeHtml(s.element)}, ${escapeHtml(s.tier)})</span></span>`).join("") : `<p style="color:var(--text-lo); font-size:12.5px;">None granted yet.</p>`}
+    </div>
     <div>
       <label>Unlocked skills</label>
       ${unlocked.length ? unlocked.map((s) => `

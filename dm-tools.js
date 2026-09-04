@@ -9,40 +9,131 @@
 const DMTools = (() => {
   let roomRef;
 
+  const TUTORIAL_SECTIONS = [
+    {
+      title: "The basics: pick a target, then act",
+      body: `Almost every tab has a dropdown at the top ("Adjust a player", "Apply a status effect", etc). That dropdown is who your next action applies to. Pick the player first, then use the fields below it — nothing you do on these tabs affects anyone except whoever is currently selected in that tab's dropdown.`,
+    },
+    {
+      title: "Overview — see everything about a player at once",
+      body: `The first tab. Pick a player and you'll see their HP, all seven attributes, status effects, inventory, sword style + mastery, known spells, and any skills they've unlocked — all in one read-only card. Use this to quickly check where someone stands before deciding what to do to them. To actually change any of it, use the specific tab for that thing (see below).`,
+    },
+    {
+      title: "Notes — talk to yourself or the table",
+      body: `Write a note and choose Private (only you ever see it — good for planning ahead) or Public (posted to every player's "DM Notes" tab immediately). Good for foreshadowing, reminders, or an in-character whisper you want on record.`,
+    },
+    {
+      title: "Events — apply or remove status effects",
+      body: `Pick a player, type a status name (Burned, Stunned, Blessed — anything you want, it's free text), and hit Apply. It shows up as a chip on their Condition tab immediately and posts to the story feed. Click the × on a chip here to remove it.`,
+    },
+    {
+      title: "Stats & HP — adjust attributes and health live",
+      body: `Pick a player, then use the +/− steppers to change any of their seven attributes (capped at ${GameData.attributeCap} each), or type new HP current/max values directly. Hit "Save changes" to push it live — their stat bars and HP bar update instantly on their screen.`,
+    },
+    {
+      title: "Inventory — give or take items",
+      body: `Pick a player, type an item name and quantity, hit Add. Adding an item they already have increases the stack instead of duplicating it. Click Remove next to any item to take it away entirely.`,
+    },
+    {
+      title: "Classes — this is how you assign sword styles and spells",
+      body: `This is the tab your friend was missing. "Sword styles" and "spells" are reference material everywhere else in the app (Spellbook, Skill Lib) — they don't attach to anyone until you do it here.
+      <br><br><strong>Sword style:</strong> pick a player, pick one of the four styles and a mastery level (Beginner through God), hit "Set sword style." A player can only hold one active style at a time — picking a new one replaces the old.
+      <br><br><strong>Spells:</strong> pick an element and tier, pick the specific spell from the dropdown that fills in below, hit Grant. It's now permanently listed under that player's "known spells" — visible to you on Overview and to them on their own Condition tab. Click the × on a spell chip here to make them forget it.`,
+    },
+    {
+      title: "Skills — define attribute thresholds that auto-unlock",
+      body: `This is different from Classes. A "skill" here isn't granted to one player directly — instead you define a rule ("Stealth 8+ unlocks Wind Cutters") once, and it applies to the whole table automatically: any player whose Stealth reaches 8 sees it appear on their own Condition tab with no further action from you. Use this for abilities that should reward raising a stat, rather than a one-off item you hand to a specific person.`,
+    },
+    {
+      title: "Dice — force a roll",
+      body: `Pick a player, a die size, and an optional reason ("Stealth check"), hit "Send roll request." It appears on that player's Dice tab immediately; once they roll, the result posts to the story feed automatically. This works regardless of whose turn it is or whether chat/dice are locked — a DM request always gets through.`,
+    },
+    {
+      title: "Spells & Skill Lib — read-only reference",
+      body: `Spells lets you browse and filter the full spell list by element/tier/name. Skill Lib shows the intellectual skills, sword style descriptions, and the mastery ladder, plus the custom skills you've defined. Neither of these tabs changes anything about a player by itself — use Classes (for spells/sword style) or Skills (for thresholds) to actually apply them.`,
+    },
+    {
+      title: "The \"Table\" button — turns, chat, and dice locks",
+      body: `Up in the top bar, the "Table" button (next to your role pill) shows every player. Click a name to make it their turn — that unlocks the chat box and free dice roll just for them, shown with a green dot. Click the same name again to clear the turn for everyone. The two checkboxes below the roster ("Open chat to everyone" / "Open dice to everyone") bypass turns entirely if you want a free-for-all moment.`,
+    },
+  ];
+
+  function tutorialHtml() {
+    return TUTORIAL_SECTIONS.map((s) => `
+      <div class="tutorial-section">
+        <h4>${escapeHtml(s.title)}</h4>
+        <p>${s.body}</p>
+      </div>
+    `).join("");
+  }
+
+  function wireTutorial() {
+    const btn = document.getElementById("dmTutorialBtn");
+    const overlay = document.getElementById("tutorialModal");
+    const card = document.getElementById("tutorialModalCard");
+    if (!btn || !overlay || !card) return;
+
+    btn.classList.remove("hidden");
+    btn.onclick = () => {
+      card.innerHTML = `
+        <div class="modal-head">
+          <h3>Dice Master tutorial</h3>
+          <button class="btn btn-ghost" id="tutorialCloseBtn">✕</button>
+        </div>
+        <div class="modal-body">${tutorialHtml()}</div>
+      `;
+      overlay.classList.remove("hidden");
+      document.getElementById("tutorialCloseBtn").addEventListener("click", () => {
+        overlay.classList.add("hidden");
+      });
+    };
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) overlay.classList.add("hidden");
+    });
+  }
+
   async function render(tabBar, panels, room) {
     roomRef = room;
     tabBar.innerHTML = `
-      <button data-tab="notes" class="active">Notes</button>
+      <button data-tab="overview" class="active">Overview</button>
+      <button data-tab="notes">Notes</button>
       <button data-tab="events">Events</button>
       <button data-tab="stats">Stats & HP</button>
       <button data-tab="inventory">Inventory</button>
-      <button data-tab="dice">Dice</button>
+      <button data-tab="classes">Classes</button>
       <button data-tab="skills">Skills</button>
+      <button data-tab="dice">Dice</button>
       <button data-tab="spellbook">Spells</button>
       <button data-tab="skilllib">Skill Lib</button>
     `;
     panels.innerHTML = `
-      <div class="tab-panel active" data-panel="notes" id="dmNotesTab"></div>
+      <div class="tab-panel active" data-panel="overview" id="dmOverviewTab"></div>
+      <div class="tab-panel" data-panel="notes" id="dmNotesTab"></div>
       <div class="tab-panel" data-panel="events" id="dmEventsTab"></div>
       <div class="tab-panel" data-panel="stats" id="dmStatsTab"></div>
       <div class="tab-panel" data-panel="inventory" id="dmInventoryTab"></div>
-      <div class="tab-panel" data-panel="dice" id="dmDiceTab"></div>
+      <div class="tab-panel" data-panel="classes" id="dmClassesTab"></div>
       <div class="tab-panel" data-panel="skills" id="dmSkillsTab"></div>
+      <div class="tab-panel" data-panel="dice" id="dmDiceTab"></div>
       <div class="tab-panel" data-panel="spellbook" id="dmSpellbookTab"></div>
       <div class="tab-panel" data-panel="skilllib" id="dmSkillLibTab"></div>
     `;
     wireTabBar(tabBar, document.getElementById("rightSidebar"));
 
     await Promise.all([
+      renderOverviewTab(),
       renderNotesTab(),
       renderEventsTab(),
       renderStatsTab(),
       renderInventoryTab(),
-      renderDiceTab(),
+      renderClassesTab(),
       renderSkillsTab(),
+      renderDiceTab(),
       renderSpellbookTab(),
       renderSkillLibTab(),
     ]);
+
+    wireTutorial();
   }
 
   function characters() {
@@ -70,6 +161,84 @@ const DMTools = (() => {
     const saved = await DB.upsertCharacter(character);
     Sync.emit("character:update", { character: saved });
     return saved;
+  }
+
+  /* --------------------------------------------------------- Overview
+   * Read-only "everything about this player at a glance" card: HP,
+   * every stat, status effects, inventory, sword style/mastery, known
+   * spells, and any unlocked skills — the whole character sheet in one
+   * place instead of hunting across six tabs.
+   */
+  async function renderOverviewTab() {
+    const el = document.getElementById("dmOverviewTab");
+    el.innerHTML = `
+      <div class="dm-section">
+        <h3>Player at a glance</h3>
+        <div class="dm-target-picker">${await targetSelectHtml("overviewTarget")}</div>
+        <div id="overviewBody"></div>
+      </div>
+    `;
+    document.getElementById("overviewTarget").addEventListener("change", renderOverviewBody);
+    renderOverviewBody();
+  }
+
+  async function renderOverviewBody() {
+    const body = document.getElementById("overviewBody");
+    const target = await currentTarget("overviewTarget");
+    if (!target) return (body.innerHTML = `<p class="empty-state">No characters yet.</p>`);
+
+    const hpPct = Math.max(0, Math.min(100, (target.hp.current / target.hp.max) * 100));
+    const customSkills = await DB.getCustomSkills(roomRef.id);
+    const unlocked = customSkills.filter((s) => (target.stats[s.thresholdAttribute] || 0) >= s.thresholdValue);
+    const knownSpells = target.knownSpells || [];
+
+    body.innerHTML = `
+      <div class="overview-name">${escapeHtml(target.name)}${target.isDM ? " (you)" : ""}</div>
+
+      <div class="hp-block">
+        <div class="hp-numbers"><span>HP</span><span>${target.hp.current} / ${target.hp.max}</span></div>
+        <div class="hp-track"><div class="hp-fill" style="width:${hpPct}%"></div></div>
+      </div>
+
+      <label>Attributes</label>
+      ${GameData.attributes.map((attr) => {
+        const val = target.stats[attr] || 0;
+        return `<div class="stat-row">
+          <span class="stat-name">${attr}</span>
+          <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${(val / GameData.attributeCap) * 100}%; background:${STAT_COLORS[attr] || "var(--gold)"}"></div></div>
+          <span class="stat-val">${val}</span>
+        </div>`;
+      }).join("")}
+
+      <label style="margin-top:14px;">Status effects</label>
+      <div style="margin-bottom:16px;">
+        ${target.statusEffects.length ? target.statusEffects.map((s) => `<span class="status-chip">${escapeHtml(s)}</span>`).join("") : `<span style="color:var(--text-lo); font-size:12.5px;">None active</span>`}
+      </div>
+
+      <label>Inventory</label>
+      <div style="margin-bottom:16px;">
+        ${target.inventory.length ? target.inventory.map((i) => `<div class="inventory-item"><span>${escapeHtml(i.name)}</span><span class="qty">×${i.qty}</span></div>`).join("") : `<p style="color:var(--text-lo); font-size:12.5px; margin:0;">Empty.</p>`}
+      </div>
+
+      <label>Sword style</label>
+      <div style="margin-bottom:16px;">
+        ${target.swordStyle ? `<span class="status-chip">${escapeHtml(target.swordStyle)} — ${escapeHtml(target.swordMastery || "Beginner")}</span>` : `<span style="color:var(--text-lo); font-size:12.5px;">None assigned — set one on the Classes tab.</span>`}
+      </div>
+
+      <label>Known spells</label>
+      <div style="margin-bottom:16px;">
+        ${knownSpells.length ? knownSpells.map((s) => `<span class="status-chip">${escapeHtml(s.name)} <span style="color:var(--text-lo);">(${escapeHtml(s.element)}, ${escapeHtml(s.tier)})</span></span>`).join("") : `<span style="color:var(--text-lo); font-size:12.5px;">None granted — use the Classes tab.</span>`}
+      </div>
+
+      <label>Unlocked skills</label>
+      <div>
+        ${unlocked.length ? unlocked.map((s) => `
+          <div class="skill-card">
+            <div class="skill-head"><strong>${escapeHtml(s.name)}</strong><span class="skill-tag" style="background:var(--mana)">${s.thresholdAttribute} ${s.thresholdValue}+</span></div>
+            <p>${escapeHtml(s.description)}</p>
+          </div>`).join("") : `<p class="empty-state">None yet — either raise an attribute past a threshold, or define one on the Skills tab.</p>`}
+      </div>
+    `;
   }
 
   /* ---------------------------------------------------------- Notes */
@@ -269,6 +438,128 @@ const DMTools = (() => {
     });
   }
 
+  /* ------------------------------------------------------------ Classes
+   * This is where sword styles and spells actually get attached to a
+   * player — the Spellbook and Skill Lib tabs are reference-only, this
+   * tab is the "apply it to someone" step.
+   */
+  async function renderClassesTab() {
+    const el = document.getElementById("dmClassesTab");
+    el.innerHTML = `
+      <div class="dm-section">
+        <h3>Assign a sword style</h3>
+        <div class="dm-target-picker">${await targetSelectHtml("classesTarget")}</div>
+        <div class="dm-field-row">
+          <select id="classSwordStyle">
+            <option value="">— none —</option>
+            ${GameData.swordStyles.map((s) => `<option value="${escapeHtml(s.name)}">${escapeHtml(s.name)}</option>`).join("")}
+          </select>
+          <select id="classSwordMastery">
+            ${GameData.swordMasteryLevels.map((m) => `<option value="${m}">${m}</option>`).join("")}
+          </select>
+        </div>
+        <button class="btn btn-primary btn-block" id="classSwordSaveBtn" style="margin-top:8px;">Set sword style</button>
+        <p class="mini-note">This replaces whatever style/mastery the player currently has — it's their one active style, per the mastery ladder in the Skill Lib tab.</p>
+        <div id="classCurrentStyle" style="margin-top:12px;"></div>
+      </div>
+
+      <div class="dm-section">
+        <h3>Grant a spell</h3>
+        <div class="dm-field-row">
+          <select id="classSpellElement">
+            ${Object.keys(GameData.magic).map((k) => `<option value="${k}">${GameData.magic[k].label}</option>`).join("")}
+          </select>
+          <select id="classSpellTier">
+            <option value="beginner">Beginner</option>
+            <option value="intermediate">Intermediate</option>
+            <option value="advanced">Advanced</option>
+            <option value="unique">Unique</option>
+            <option value="ultimate">Ultimate</option>
+          </select>
+        </div>
+        <div class="dm-field-row">
+          <select id="classSpellName"></select>
+          <button class="btn btn-primary" id="classSpellGrantBtn">Grant</button>
+        </div>
+        <p class="mini-note">Browse full descriptions on the Spells tab first if you're not sure which one fits — this just attaches the spell you pick to the selected player.</p>
+        <label style="margin-top:14px;">Spells this player already knows</label>
+        <div id="classKnownSpells"></div>
+      </div>
+    `;
+
+    function refreshSpellNameOptions() {
+      const element = document.getElementById("classSpellElement").value;
+      const tier = document.getElementById("classSpellTier").value;
+      const spells = (GameData.magic[element] && GameData.magic[element].tiers[tier]) || [];
+      const nameSelect = document.getElementById("classSpellName");
+      nameSelect.innerHTML = spells.length
+        ? spells.map((s) => `<option value="${escapeHtml(s.name)}">${escapeHtml(s.name)}</option>`).join("")
+        : `<option disabled>No spells at this tier</option>`;
+    }
+    document.getElementById("classSpellElement").addEventListener("change", refreshSpellNameOptions);
+    document.getElementById("classSpellTier").addEventListener("change", refreshSpellNameOptions);
+    refreshSpellNameOptions();
+
+    document.getElementById("classesTarget").addEventListener("change", renderClassesBody);
+    renderClassesBody();
+
+    document.getElementById("classSwordSaveBtn").addEventListener("click", async () => {
+      const target = await currentTarget("classesTarget");
+      const style = document.getElementById("classSwordStyle").value;
+      const mastery = document.getElementById("classSwordMastery").value;
+      target.swordStyle = style || null;
+      target.swordMastery = style ? mastery : null;
+      await pushCharacterUpdate(target);
+      announce(style
+        ? `${target.name} was set to ${style} (${mastery}).`
+        : `${target.name}'s sword style was cleared.`);
+      renderClassesBody();
+    });
+
+    document.getElementById("classSpellGrantBtn").addEventListener("click", async () => {
+      const target = await currentTarget("classesTarget");
+      const element = document.getElementById("classSpellElement").value;
+      const tier = document.getElementById("classSpellTier").value;
+      const name = document.getElementById("classSpellName").value;
+      if (!name) return;
+      target.knownSpells = target.knownSpells || [];
+      if (target.knownSpells.some((s) => s.name === name)) return;
+      target.knownSpells.push({ name, element, tier });
+      await pushCharacterUpdate(target);
+      announce(`${target.name} learned ${name}.`);
+      renderClassesBody();
+    });
+  }
+
+  async function renderClassesBody() {
+    const target = await currentTarget("classesTarget");
+    const styleBox = document.getElementById("classCurrentStyle");
+    const knownBox = document.getElementById("classKnownSpells");
+    if (!target) {
+      styleBox.innerHTML = "";
+      knownBox.innerHTML = "";
+      return;
+    }
+    document.getElementById("classSwordStyle").value = target.swordStyle || "";
+    document.getElementById("classSwordMastery").value = target.swordMastery || "Beginner";
+    styleBox.innerHTML = target.swordStyle
+      ? `<label>Current style</label><span class="status-chip">${escapeHtml(target.swordStyle)} — ${escapeHtml(target.swordMastery || "Beginner")}</span>`
+      : `<label>Current style</label><span style="color:var(--text-lo); font-size:12.5px;">None assigned yet.</span>`;
+
+    const known = target.knownSpells || [];
+    knownBox.innerHTML = known.length
+      ? known.map((s, idx) => `<span class="status-chip">${escapeHtml(s.name)} <button data-idx="${idx}">×</button></span>`).join("")
+      : `<span style="color:var(--text-lo); font-size:12.5px;">None granted yet.</span>`;
+    knownBox.querySelectorAll("button[data-idx]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const removed = target.knownSpells.splice(Number(btn.dataset.idx), 1)[0];
+        await pushCharacterUpdate(target);
+        announce(`${target.name} forgot ${removed.name}.`);
+        renderClassesBody();
+      });
+    });
+  }
+
   /* ------------------------------------------------------------ Dice */
   async function renderDiceTab() {
     const el = document.getElementById("dmDiceTab");
@@ -457,7 +748,7 @@ const DMTools = (() => {
       .map((c) => `<option value="${c.id}">${escapeHtml(c.name)}${c.isDM ? " (you)" : ""}</option>`)
       .join("");
 
-    ["eventsTarget", "statsTarget", "invTarget", "diceTarget"].forEach((id) => {
+    ["eventsTarget", "statsTarget", "invTarget", "diceTarget", "overviewTarget", "classesTarget"].forEach((id) => {
       const select = document.getElementById(id);
       if (!select) return;
       const previousValue = select.value;
@@ -471,6 +762,8 @@ const DMTools = (() => {
         if (id === "eventsTarget") renderEventCurrentStatuses();
         if (id === "statsTarget") renderStatsEditorBody();
         if (id === "invTarget") renderInvList();
+        if (id === "overviewTarget") renderOverviewBody();
+        if (id === "classesTarget") renderClassesBody();
       }
     });
   }

@@ -43,6 +43,7 @@
     <div class="topbar-user">
       <span id="charNameLabel">—</span>
       <span class="role-pill" id="rolePill">Player</span>
+      <button class="btn btn-tutorial hidden" id="dmTutorialBtn">📖 Tutorial</button>
       <div class="roster-wrap">
         <button class="btn btn-roster" id="rosterBtn" title="Table roster">
           <span class="roster-torch">&#128293;</span> Table
@@ -86,6 +87,13 @@
     </aside>
 
   </div>
+</div>
+
+<!-- ============================================================
+     DM TUTORIAL MODAL — populated by dm-tools.js
+     ============================================================ -->
+<div id="tutorialModal" class="modal-overlay hidden">
+  <div class="modal-card" id="tutorialModalCard"></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>

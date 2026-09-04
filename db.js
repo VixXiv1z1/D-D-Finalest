@@ -123,6 +123,9 @@ const DB = {
       statusEffects: [],
       inventory: [],
       unlockedSkills: [],
+      swordStyle: null,
+      swordMastery: null,
+      knownSpells: [],
       createdAt: Date.now(),
     };
     const ref = await col("characters").add(data);
