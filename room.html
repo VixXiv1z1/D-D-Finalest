@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Quevela — Table</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ============================================================
+     CHARACTER CREATION — shown once per character until saved
+     ============================================================ -->
+<div id="creationView" class="creation-shell hidden">
+  <div class="creation-card">
+    <h2>Build your character</h2>
+    <p id="creationBudgetLine">Distribute your points across the seven attributes. No attribute may exceed 10.</p>
+
+    <div>
+      <label for="creationCharName">Character name</label>
+      <input id="creationCharName" style="margin-bottom:18px;" />
+    </div>
+
+    <div class="points-remaining">Points remaining: <strong id="pointsRemaining">20</strong></div>
+
+    <div id="creationStatRows"></div>
+
+    <p class="form-msg error" id="creationMsg"></p>
+    <button class="btn btn-primary btn-block" id="saveCharacterBtn" style="margin-top:10px;">Enter the table</button>
+    <button class="btn btn-ghost btn-block hidden" id="skipCharacterBtn" style="margin-top:8px;">Skip — I'll just Dice Master, no character</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     MAIN APP SHELL
+     ============================================================ -->
+<div id="appView" class="app-shell hidden">
+  <header class="app-topbar">
+    <div class="topbar-room">
+      <h1 id="roomName">—</h1>
+      <span class="room-code">code <strong id="roomCode">—</strong></span>
+    </div>
+    <div class="topbar-user">
+      <span id="charNameLabel">—</span>
+      <span class="role-pill" id="rolePill">Player</span>
+      <div class="roster-wrap">
+        <button class="btn btn-roster" id="rosterBtn" title="Table roster">
+          <span class="roster-torch">&#128293;</span> Table
+        </button>
+        <div class="roster-dropdown hidden" id="rosterDropdown"></div>
+      </div>
+      <button class="btn btn-ghost" id="leaveBtn">Leave</button>
+    </div>
+  </header>
+
+  <div class="room-grid" id="roomGrid">
+
+    <!-- LEFT SIDEBAR — DM's own character, mirrors the player layout.
+         Hidden entirely for players, and for a DM with no character. -->
+    <aside class="sidebar" id="leftSidebar">
+      <div class="tab-bar" id="leftTabBar">
+        <button data-tab="stats" class="active">Stats</button>
+        <button data-tab="condition">Condition</button>
+        <button data-tab="notes">DM Notes</button>
+        <button data-tab="dice">Dice</button>
+      </div>
+      <div class="tab-panel active" data-panel="stats" id="leftStatsPanel"></div>
+      <div class="tab-panel" data-panel="condition" id="leftConditionPanel"></div>
+      <div class="tab-panel" data-panel="notes" id="leftNotesPanel"></div>
+      <div class="tab-panel" data-panel="dice" id="leftDicePanel"></div>
+    </aside>
+
+    <!-- CENTER — shared story / chat feed -->
+    <section class="story-column">
+      <div class="story-feed" id="storyFeed"></div>
+      <form class="composer" id="composerForm">
+        <input id="composerInput" placeholder="Say something to the table…" autocomplete="off" />
+        <button class="btn btn-primary" type="submit">Send</button>
+      </form>
+    </section>
+
+    <!-- RIGHT SIDEBAR — Player tabs OR DM Tools, depending on role -->
+    <aside class="sidebar right" id="rightSidebar">
+      <div class="tab-bar" id="rightTabBar"></div>
+      <div id="rightPanels"></div>
+    </aside>
+
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="gamedata.js"></script>
+<script src="db.js"></script>
+<script src="auth.js"></script>
+<script src="sync.js"></script>
+<script src="dice.js"></script>
+<script src="room.js"></script>
+<script src="dm-tools.js"></script>
+</body>
+</html>
